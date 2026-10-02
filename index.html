@@ -679,7 +679,7 @@ h1, h2, h3 { text-wrap: balance; }
           <li data-i="4"><b>05</b><span>Pannello in plexiglass</span></li>
           <li data-i="5"><b>06</b><span>Distanziali e alimentatore</span></li>
         </ol>
-        <p class="xp__hint">Trascina l'insegna per ruotarla</p>
+        <p class="xp__hint">Trascina per girarla a 360°</p>
       </div>
       <div class="xp__stage">
         <canvas id="xpCanvas" aria-label="Insegna neon a forma di patatine fritte che si scompone in 3D nei suoi strati" role="img"></canvas>
@@ -1282,67 +1282,88 @@ h1, h2, h3 { text-wrap: balance; }
     if (!sec || !canvas || !window.THREE) return;
     const T = window.THREE;
     let renderer;
-    try { renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: false }); } catch (e) { return; }
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    try { renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { return; }
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2.5));
     renderer.outputEncoding = T.sRGBEncoding;
+    const maxAniso = renderer.capabilities.getMaxAnisotropy();
     const scene = new T.Scene();
     const cam = new T.PerspectiveCamera(30, 1, 0.1, 100);
-    scene.add(new T.AmbientLight(0xffffff, 0.5));
-    const key = new T.DirectionalLight(0xffffff, 0.9); key.position.set(4, 5, 8); scene.add(key);
-    const warm = new T.PointLight(0xff7a2a, 2.2, 14); warm.position.set(0, 0, 2.5); scene.add(warm);
+    scene.add(new T.AmbientLight(0xffffff, 0.55));
+    const key = new T.DirectionalLight(0xffffff, 1); key.position.set(4, 5, 8); scene.add(key);
+    const back = new T.DirectionalLight(0xffb070, 0.6); back.position.set(-4, 2, -6); scene.add(back);
+    const warm = new T.PointLight(0xff7a2a, 1.6, 12); warm.position.set(0, 0, 2); scene.add(warm);
 
-    const IW = 4.4, IH = IW * 1199 / 1312;
+    // immagine originale 1312 x 1199: coordinate dei pezzi in pixel
+    const SW = 1312, SH = 1199, IW = 4.4, IH = IW * SH / SW;
+    const PIECES = {
+      chunks: [215, 64, 832, 333], ketchup: [821, 28, 1248, 504],
+      fries: [0, 9, 1298, 665], cup: [0, 574, 1292, 1199],
+    };
     const root = new T.Group(); scene.add(root);
     const loader = new T.TextureLoader();
     const parts = [];
     let loaded = 0;
-    const tex = (name) => {
-      const t = loader.load("img/fries/" + name + ".webp", () => { if (++loaded >= 5) document.getElementById("xpFallback").classList.add("hide"); });
-      t.encoding = T.sRGBEncoding; t.anisotropy = 8; return t;
+    const add = (obj, z, dz, dx, dy) => { obj.position.z += z; root.add(obj); parts.push({ obj, x: obj.position.x, y: obj.position.y, z: obj.position.z, dz, dx: dx || 0, dy: dy || 0 }); return obj; };
+
+    // un pezzo di neon con spessore: più lastre sovrapposte, quelle interne più scure
+    const piece = (name) => {
+      const [x0, y0, x1, y1] = PIECES[name];
+      const w = (x1 - x0) / SW * IW, h = (y1 - y0) / SH * IH;
+      const t = loader.load("img/fries/" + name + ".webp", () => { if (++loaded >= 4) document.getElementById("xpFallback").classList.add("hide"); });
+      t.encoding = T.sRGBEncoding; t.anisotropy = maxAniso;
+      const g = new T.Group();
+      const geo = new T.PlaneGeometry(w, h);
+      const N = 7, depth = 0.12;
+      for (let i = 0; i < N; i++) {
+        const k = i / (N - 1);
+        const edgeSlice = i === 0 || i === N - 1;
+        const shade = edgeSlice ? 1 : 0.55;
+        const m = new T.MeshBasicMaterial({ map: t, transparent: true, alphaTest: 0.04, depthWrite: false, side: T.DoubleSide, color: new T.Color(shade, shade, shade) });
+        const mesh = new T.Mesh(geo, m);
+        mesh.position.z = -depth / 2 + depth * k;
+        g.add(mesh);
+      }
+      g.position.set(((x0 + x1) / 2 / SW - 0.5) * IW, -((y0 + y1) / 2 / SH - 0.5) * IH, 0);
+      return g;
     };
-    const add = (obj, z, dz, dx, dy) => { obj.position.z = z; root.add(obj); parts.push({ obj, x: obj.position.x, y: obj.position.y, z, dz, dx: dx || 0, dy: dy || 0 }); return obj; };
-    const layer = (name, opacity, blending) => new T.Mesh(new T.PlaneGeometry(IW, IH), new T.MeshBasicMaterial({ map: tex(name), transparent: true, opacity: opacity || 1, depthWrite: false, blending: blending || T.NormalBlending, side: T.DoubleSide }));
 
-    // glow alle spalle (si allontana col pannello)
-    const glow = layer("glow", 0.9, T.AdditiveBlending); glow.scale.set(1.25, 1.25, 1);
-    add(glow, -0.35, -1.6);
-
-    // pannello in plexiglass con bordo
+    // pannello in plexiglass
     const pw = IW * 1.04, ph = IH * 1.02;
     const panel = new T.Group();
-    panel.add(new T.Mesh(new T.PlaneGeometry(pw, ph), new T.MeshBasicMaterial({ color: 0xbfd8ff, transparent: true, opacity: 0.07, depthWrite: false, side: T.DoubleSide })));
-    const edge = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(pw, ph, 0.06)), new T.LineBasicMaterial({ color: 0xdbe8ff, transparent: true, opacity: 0.55 }));
-    panel.add(edge);
-    add(panel, -0.25, -1.3);
+    panel.add(new T.Mesh(new T.BoxGeometry(pw, ph, 0.05), new T.MeshPhysicalMaterial({ color: 0xdfeaff, transparent: true, opacity: 0.12, roughness: 0.05, metalness: 0, depthWrite: false, side: T.DoubleSide })));
+    panel.add(new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(pw, ph, 0.05)), new T.LineBasicMaterial({ color: 0xe8f0ff, transparent: true, opacity: 0.7 })));
+    add(panel, -0.3, -1.3);
 
-    // distanziali + alimentatore
-    const metal = new T.MeshStandardMaterial({ color: 0xc9ccd2, metalness: 0.9, roughness: 0.25 });
+    // distanziali, cavo e alimentatore
+    const metal = new T.MeshStandardMaterial({ color: 0xd4d7dd, metalness: 0.95, roughness: 0.22 });
     const hw = new T.Group();
     [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, y]) => {
-      const c = new T.Mesh(new T.CylinderGeometry(0.07, 0.07, 0.42, 24), metal);
-      c.rotation.x = Math.PI / 2; c.position.set(x * (pw / 2 - 0.18), y * (ph / 2 - 0.18), 0); hw.add(c);
+      const c = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, 0.45, 32), metal);
+      c.rotation.x = Math.PI / 2; c.position.set(x * (pw / 2 - 0.2), y * (ph / 2 - 0.2), 0); hw.add(c);
+      const cap = new T.Mesh(new T.CylinderGeometry(0.1, 0.1, 0.04, 32), metal);
+      cap.rotation.x = Math.PI / 2; cap.position.set(x * (pw / 2 - 0.2), y * (ph / 2 - 0.2), 0.24); hw.add(cap);
     });
-    const psu = new T.Mesh(new T.BoxGeometry(0.8, 0.28, 0.2), new T.MeshStandardMaterial({ color: 0x23262e, metalness: 0.6, roughness: 0.45 }));
-    psu.position.set(0, -ph / 2 - 0.05, -0.1); hw.add(psu);
-    const led = new T.Mesh(new T.SphereGeometry(0.03, 12, 12), new T.MeshBasicMaterial({ color: 0x5cff9d })); led.position.set(0.3, -ph / 2 + 0.03, 0.01); hw.add(led);
-    add(hw, -0.45, -2.3, 0, -0.25);
+    const psu = new T.Mesh(new T.BoxGeometry(0.9, 0.3, 0.22), new T.MeshStandardMaterial({ color: 0x1b1d23, metalness: 0.7, roughness: 0.35 }));
+    psu.position.set(0, -ph / 2 - 0.15, -0.1); hw.add(psu);
+    const led = new T.Mesh(new T.SphereGeometry(0.03, 16, 16), new T.MeshBasicMaterial({ color: 0x5cff9d })); led.position.set(0.34, -ph / 2 - 0.08, 0.02); hw.add(led);
+    const cable = new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([new T.Vector3(0, -ph / 2, -0.1), new T.Vector3(0.1, -ph / 2 + 0.25, -0.05), new T.Vector3(0.05, -ph / 2 + 0.5, 0)]), 24, 0.02, 8), new T.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 }));
+    hw.add(cable);
+    add(hw, -0.5, -2.3, 0, -0.2);
 
-    // strati del neon (dal fondo al fronte)
-    add(layer("cup"), 0, 0.55, 0, -0.18);
-    add(layer("fries"), 0.04, 1.35, 0, 0.12);
-    add(layer("ketchup"), 0.08, 2.1, 0.35, 0.28);
-    add(layer("chunks"), 0.1, 2.75, -0.1, 0.5);
-    // bagliore frontale per far "accendere" i colori
-    const bloom = layer("glow", 0.45, T.AdditiveBlending); bloom.scale.set(1.08, 1.08, 1);
-    add(bloom, 0.12, 0.5);
+    // strati del neon
+    add(piece("cup"), 0, 0.6, 0, -0.2);
+    add(piece("fries"), 0.05, 1.4, 0, 0.12);
+    add(piece("ketchup"), 0.1, 2.2, 0.4, 0.3);
+    add(piece("chunks"), 0.12, 2.9, -0.1, 0.5);
 
-    // interazione
-    let rotY = 0, rotX = 0, tRotY = 0, tRotX = 0, dragging = false, lx = 0, ly = 0, lastMove = 0;
-    canvas.addEventListener("pointerdown", (e) => { dragging = true; lx = e.clientX; ly = e.clientY; canvas.setPointerCapture(e.pointerId); });
+    // interazione: rotazione libera a 360°
+    let rotY = 0, rotX = 0, tRotY = 0, tRotX = 0, dragging = false, lx = 0, ly = 0, lastMove = -1e9, vel = 0;
+    canvas.addEventListener("pointerdown", (e) => { dragging = true; lx = e.clientX; ly = e.clientY; vel = 0; canvas.setPointerCapture(e.pointerId); });
     canvas.addEventListener("pointermove", (e) => {
       if (!dragging) return;
-      tRotY = Math.max(-1, Math.min(1, tRotY + (e.clientX - lx) * 0.006));
-      tRotX = Math.max(-0.45, Math.min(0.45, tRotX + (e.clientY - ly) * 0.004));
+      const dx = (e.clientX - lx) * 0.009;
+      tRotY += dx; vel = dx;
+      tRotX = Math.max(-0.7, Math.min(0.7, tRotX + (e.clientY - ly) * 0.005));
       lx = e.clientX; ly = e.clientY; lastMove = performance.now();
     });
     const stop = () => { dragging = false; };
@@ -1359,15 +1380,17 @@ h1, h2, h3 { text-wrap: balance; }
       const r = canvas.getBoundingClientRect();
       renderer.setSize(r.width, r.height, false);
       cam.aspect = r.width / Math.max(1, r.height);
-      cam.position.set(0, 0.6, r.width < 600 ? 14 : 11);
+      cam.position.set(0, 0.5, r.width < 600 ? 14.5 : 11.5);
       cam.lookAt(0, 0, 0);
       cam.updateProjectionMatrix();
     };
     addEventListener("resize", size);
 
     const ease = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+    let last = performance.now();
     const loop = (t) => {
       requestAnimationFrame(loop);
+      const dt = Math.min(0.05, (t - last) / 1000); last = t;
       if (!visible) return;
       let p;
       if (reduceM) p = 0.7; else {
@@ -1378,12 +1401,13 @@ h1, h2, h3 { text-wrap: balance; }
       P += (p - P) * 0.1;
       const e = ease(P);
       parts.forEach((pt) => { pt.obj.position.set(pt.x + pt.dx * e, pt.y + pt.dy * e, pt.z + pt.dz * e); });
-      // tremolio neon leggero
-      const flick = reduceM ? 1 : 0.94 + Math.sin(t / 90) * 0.02 + (Math.random() < 0.01 ? -0.15 : 0);
-      bloom.material.opacity = 0.45 * flick; warm.intensity = 2.2 * flick;
-      const idle = performance.now() - lastMove > 2500 && !dragging;
-      const baseY = -0.25 - e * 0.5 + (idle && !reduceM ? Math.sin(t / 2400) * 0.1 : 0);
-      rotY += ((tRotY + baseY) - rotY) * 0.08; rotX += ((tRotX + 0.06 + e * 0.12) - rotX) * 0.08;
+      warm.intensity = reduceM ? 1.6 : 1.5 + Math.sin(t / 90) * 0.05 + (Math.random() < 0.01 ? -0.4 : 0);
+      // inerzia dopo il trascinamento, poi lenta rotazione automatica
+      if (!dragging) { tRotY += vel; vel *= 0.94; }
+      const idle = performance.now() - lastMove > 3000 && !dragging;
+      if (idle && !reduceM) tRotY += dt * 0.25 * (0.3 + e);
+      const baseY = -0.3 - e * 0.4;
+      rotY += ((tRotY + baseY) - rotY) * 0.1; rotX += ((tRotX + 0.06 + e * 0.12) - rotX) * 0.08;
       root.rotation.set(rotX, rotY, 0);
       pctEl.textContent = Math.round(e * 100) + "%";
       const active = Math.min(items.length - 1, Math.floor(e * items.length * 0.999));

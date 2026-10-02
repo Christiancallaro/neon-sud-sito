@@ -624,8 +624,10 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
     if (!v("name") || !v("tel")) { formMsg.textContent = "Inserisci nome e telefono, così possiamo richiamarti."; (v("name") ? form.elements.tel : form.elements.name).focus(); return; }
     const date = v("date") ? new Date(v("date") + "T12:00:00").toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" }) : "da definire";
     const text = "Buongiorno, sono " + v("name") + ". Vorrei prenotare un appuntamento in atelier.\nData del matrimonio: " + date + "\nPreferenza: " + v("slot") + "\nTelefono: " + v("tel") + (v("msg") ? "\n\n" + v("msg") : "");
-    window.open("https://wa.me/393467416047?text=" + encodeURIComponent(text), "_blank", "noopener");
-    formMsg.textContent = "Si sta aprendo WhatsApp con il messaggio pronto: premi invio per mandarlo.";
+    const url = "https://wa.me/393467416047?text=" + encodeURIComponent(text);
+    formMsg.innerHTML = 'Messaggio pronto. <a class="link" href="' + url + '" target="_blank" rel="noopener">Apri WhatsApp e invia</a>';
+    const w = window.open(url, "_blank", "noopener");
+    if (w) formMsg.innerHTML = 'Si sta aprendo WhatsApp con il messaggio pronto. Se non si apre, <a class="link" href="' + url + '" target="_blank" rel="noopener">tocca qui</a>.';
   });
   document.getElementById("year").textContent = new Date().getFullYear();
 

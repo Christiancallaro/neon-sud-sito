@@ -108,25 +108,20 @@ em, .it { font-family: var(--f-serif); font-style: italic; font-weight: 400; }
 .hero { position: relative; height: 100svh; min-height: 620px; overflow: hidden; background: #1d1612; }
 .hero__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .hero__shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(29, 22, 18, 0.45) 0%, rgba(29, 22, 18, 0) 28%, rgba(29, 22, 18, 0) 50%, rgba(29, 22, 18, 0.55) 100%), linear-gradient(90deg, rgba(29, 22, 18, 0.45), rgba(29, 22, 18, 0) 55%); }
-.hd { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity 1.6s var(--ease); display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: clamp(24px, 4vw, 70px); padding: 110px var(--pad) 70px; }
-.hd__bg { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: saturate(0.9); transform: scale(1.1); transition: transform 7s linear; }
-.hd.on { opacity: 1; pointer-events: auto; }
-.hd.on .hd__bg { transform: scale(1.02); }
-.hd .arch { transform: scale(1.05); transition: transform 7s var(--ease); }
-.hd.on .arch { transform: scale(1); }
-.hd .hd__cap, .hd .hd__side { opacity: 0; transform: translateY(18px); transition: opacity 1.2s var(--ease) 0.5s, transform 1.2s var(--ease) 0.5s; }
-.hd.on .hd__cap, .hd.on .hd__side { opacity: 1; transform: none; }
-.hd__bg::after { content: ""; position: absolute; inset: 0; background: rgba(251, 248, 243, 0.62); }
-.hd .arch { grid-column: 2; height: min(74svh, 760px); aspect-ratio: 0.74; width: auto; }
-.hd .arch__in { height: 100%; }
-.hd__cap { position: relative; grid-column: 1; justify-self: end; text-align: right; max-width: 22rem; color: var(--ink); }
-.hd__cap .label { color: var(--gold-ink); }
-.hd__cap h2 { margin: 14px 0 12px; font-family: var(--f-serif); font-weight: 400; font-size: clamp(2.2rem, 3.6vw, 3.6rem); line-height: 1.02; }
-.hd__cap p { margin: 0; color: var(--taupe); }
-.hd__side { position: relative; grid-column: 3; justify-self: start; max-width: 18rem; color: var(--taupe); }
-.hd__side .btn { margin-top: 24px; color: var(--ink); }
-.hd__num { font-family: var(--f-serif); font-style: italic; font-size: 64px; line-height: 1; color: var(--gold); }
 
+.hd { position: absolute; inset: 0; opacity: 0; pointer-events: none; overflow: hidden; transition: opacity 1.6s var(--ease); }
+.hd.on { opacity: 1; pointer-events: auto; }
+.hd__bg { position: absolute; inset: -60px; background-size: cover; background-position: center; filter: saturate(0.95) brightness(0.85); }
+.hd__img { position: absolute; top: 0; right: 0; height: 100%; width: 64%; object-fit: cover; transform: scale(1.08); transform-origin: 60% 40%; transition: transform 7s var(--ease);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 26%); mask-image: linear-gradient(90deg, transparent 0%, #000 26%); }
+.hd--full .hd__img { width: 100%; -webkit-mask-image: none; mask-image: none; }
+.hd.on .hd__img { transform: scale(1); }
+.hd__shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(29, 22, 18, 0.62) 0%, rgba(29, 22, 18, 0.32) 38%, rgba(29, 22, 18, 0) 62%), linear-gradient(180deg, rgba(29, 22, 18, 0.35) 0%, rgba(29, 22, 18, 0) 22%, rgba(29, 22, 18, 0) 70%, rgba(29, 22, 18, 0.35) 100%); }
+.hd__cap { position: absolute; left: var(--pad); bottom: clamp(70px, 13vh, 130px); max-width: 36rem; color: var(--white); text-shadow: 0 1px 30px rgba(29, 22, 18, 0.45); opacity: 0; transform: translateY(22px); transition: opacity 1.3s var(--ease) 0.5s, transform 1.3s var(--ease) 0.5s; }
+.hd.on .hd__cap { opacity: 1; transform: none; }
+.hd__cap .label { color: #f1e3c8; }
+.hd__cap h2 { margin: 16px 0 16px; font-family: var(--f-serif); font-weight: 400; font-size: clamp(2.8rem, 6.4vw, 6.2rem); line-height: 0.98; }
+.hd__cap p { margin: 0 0 30px; max-width: 28rem; font-size: 18px; }
 .hc { position: absolute; left: var(--pad); bottom: clamp(70px, 13vh, 130px); max-width: 40rem; color: var(--white); opacity: 0; will-change: opacity, transform; text-shadow: 0 1px 30px rgba(29, 22, 18, 0.45); }
 .hc .label { color: #f1e3c8; }
 .hc h2 { margin: 16px 0 0; font-family: var(--f-serif); font-weight: 400; font-size: clamp(2.4rem, 5.2vw, 5rem); line-height: 1.02; text-wrap: balance; }
@@ -139,7 +134,6 @@ em, .it { font-family: var(--f-serif); font-style: italic; font-weight: 400; }
 .hc--intro p { margin: 0 0 30px; max-width: 30rem; font-size: 18px; }
 .hc__cta { display: flex; flex-wrap: wrap; gap: 14px; }
 .hero__steps { position: absolute; z-index: 3; right: var(--pad); bottom: clamp(28px, 5vh, 48px); display: flex; gap: 18px; color: var(--white); transition: color 0.8s var(--ease); }
-.hero:not([data-phase="0"]) .hero__steps { color: var(--ink); }
 .hero__steps button { display: grid; gap: 10px; padding: 6px 0; border: 0; background: none; cursor: pointer; text-align: left; opacity: 0.6; transition: opacity 0.4s; }
 .hero__steps button:hover, .hero__steps button.on { opacity: 1; }
 .hero__steps span { font-size: 10.5px; letter-spacing: 0.24em; text-transform: uppercase; font-weight: 400; }
@@ -271,11 +265,6 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
   .logo { justify-items: start; text-align: left; }
   .logo small { margin-left: 0; }
   .burger { display: block; }
-  .hd { grid-template-columns: 1fr; grid-template-rows: auto auto; align-content: center; justify-items: center; gap: 22px; padding: 90px var(--pad) 70px; text-align: center; }
-  .hd .arch { grid-column: 1; grid-row: 1; height: min(52svh, 520px); }
-  .hd__cap { grid-column: 1; grid-row: 2; justify-self: center; text-align: center; }
-  .hd__cap h2 { margin: 8px 0 6px; }
-  .hd__side { display: none; }
   .feat, .atl__grid { grid-template-columns: 1fr; }
   .feat--rev .feat__media { order: 0; }
   .feat__txt { max-width: none; }
@@ -291,6 +280,10 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
 @media (max-width: 600px) {
   body { font-size: 16px; }
   .hc { right: var(--pad); }
+  .hd__img { width: 100%; -webkit-mask-image: none; mask-image: none; object-position: var(--mpos, 50% 30%); }
+  .hd__shade { background: linear-gradient(180deg, rgba(29, 22, 18, 0.4) 0%, rgba(29, 22, 18, 0) 22%, rgba(29, 22, 18, 0) 42%, rgba(29, 22, 18, 0.78) 100%); }
+  .hd__cap { right: var(--pad); bottom: 64px; }
+  .hd__cap p { font-size: 16px; margin-bottom: 22px; }
   .hc--intro p { font-size: 16px; }
   .hero__steps { left: var(--pad); right: var(--pad); gap: 8px; }
     .hero__steps button { flex: 1; }
@@ -343,23 +336,21 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
       </video>
       <div class="hero__shade" id="shade"></div>
 
-      <div class="hd" data-i="0">
-        <div class="hd__bg" style="background-image:url('img/abito-04-blur.webp')"></div>
-        <div class="hd__cap"><p class="label">La collezione · 01</p><h2>Principessa</h2><p>Gonna ampia in tulle luminoso e uno strascico pensato per lo scalone.</p></div>
-        <div class="arch"><div class="arch__in"><img src="img/abito-04.webp" alt="Sposa con abito a principessa in tulle su uno scalone di marmo" style="object-position:58% 45%"></div></div>
-        <div class="hd__side"><p class="hd__num">I</p><p>Volume, luce e movimento: l'abito delle grandi entrate.</p></div>
+      <div class="hd hd--full" data-i="0">
+        <img class="hd__img" src="img/hero-principessa.webp" alt="Sposa con abito a principessa in tulle su uno scalone di marmo con colonne" style="object-position:58% 50%;--mpos:52% 50%">
+        <div class="hd__shade"></div>
+        <div class="hd__cap"><p class="label">La collezione · 01</p><h2>Principessa</h2><p>Gonna ampia in tulle luminoso e uno strascico pensato per lo scalone.</p><a class="btn btn--light" href="https://wa.me/393467416047?text=Buongiorno%2C%20vorrei%20prenotare%20un%20appuntamento%20in%20atelier." target="_blank" rel="noopener">Prenota una prova</a></div>
       </div>
-      <div class="hd" data-i="1">
-        <div class="hd__bg" style="background-image:url('img/abito-10-blur.webp')"></div>
-        <div class="hd__cap"><p class="label">La collezione · 02</p><h2>Ricami <em>di luce</em></h2><p>Maniche lunghe velate e un corpino ricamato che brilla a ogni passo.</p></div>
-        <div class="arch"><div class="arch__in"><img src="img/abito-10.webp" alt="Sposa con abito a maniche lunghe e corpino ricamato davanti a una finestra" style="object-position:50% 20%"></div></div>
-        <div class="hd__side"><p class="hd__num">II</p><p>Trasparenze e ricami: elegante in chiesa come in sala.</p></div>
+      <div class="hd hd--full" data-i="1">
+        <img class="hd__img" src="img/hero-ricami.webp" alt="Sposa con abito a maniche lunghe e corpino ricamato davanti a una finestra con tende" style="object-position:20% 30%;--mpos:51% 30%">
+        <div class="hd__shade"></div>
+        <div class="hd__cap"><p class="label">La collezione · 02</p><h2>Ricami <em>di luce</em></h2><p>Maniche lunghe velate e un corpino ricamato che brilla a ogni passo.</p><a class="btn btn--light" href="https://wa.me/393467416047?text=Buongiorno%2C%20vorrei%20prenotare%20un%20appuntamento%20in%20atelier." target="_blank" rel="noopener">Prenota una prova</a></div>
       </div>
       <div class="hd" data-i="2">
         <div class="hd__bg" style="background-image:url('img/abito-08-blur.webp')"></div>
-        <div class="hd__cap"><p class="label">La collezione · 03</p><h2>Mantello <em>di tulle</em></h2><p>Sirena ricamata con un mantello leggero e maniche a sbuffo.</p></div>
-        <div class="arch"><div class="arch__in"><img src="img/abito-08.webp" alt="Sposa con abito a sirena e mantello di tulle in una piazza di pietra" style="object-position:50% 25%"></div></div>
-        <div class="hd__side"><p class="hd__num">III</p><p>Il tuo abito ti aspetta in atelier.</p><a class="btn" href="https://wa.me/393467416047?text=Buongiorno%2C%20vorrei%20prenotare%20un%20appuntamento%20in%20atelier." target="_blank" rel="noopener">Prenota una prova</a></div>
+        <img class="hd__img" src="img/abito-08.webp" alt="Sposa con abito a sirena e mantello di tulle in una piazza di pietra" style="object-position:50% 20%;--mpos:50% 16%">
+        <div class="hd__shade"></div>
+        <div class="hd__cap"><p class="label">La collezione · 03</p><h2>Mantello <em>di tulle</em></h2><p>Sirena ricamata con un mantello leggero e maniche a sbuffo.</p><a class="btn btn--light" href="https://wa.me/393467416047?text=Buongiorno%2C%20vorrei%20prenotare%20un%20appuntamento%20in%20atelier." target="_blank" rel="noopener">Prenota una prova</a></div>
       </div>
 
       <div class="hc hc--intro" id="hcIntro">
@@ -640,7 +631,7 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
     requestAnimationFrame(tick);
     const y = scrollY;
     if (heroVisible) renderSteps(performance.now());
-    nav.classList.toggle("solid", y > 40 || phase !== 0);
+    nav.classList.toggle("solid", y > 40);
     const r = bandImg.parentElement.getBoundingClientRect();
     if (r.bottom > 0 && r.top < innerHeight && !reduce) bandImg.style.transform = "translateY(" + (((r.top + r.height / 2) - innerHeight / 2) * -0.12).toFixed(1) + "px)";
   };

@@ -106,10 +106,11 @@ em, .it { font-family: var(--f-serif); font-style: italic; font-weight: 400; }
 
 /* ---------- hero: scroll story ---------- */
 .hero { position: relative; height: 100svh; min-height: 620px; overflow: hidden; background: #1d1612; }
-.hero__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transform-origin: 50% 45%; transition: transform 2.6s cubic-bezier(0.45, 0, 0.2, 1), filter 2.6s cubic-bezier(0.45, 0, 0.2, 1); }
+.hero:not([data-phase="0"]) .hero__video { transform: scale(1.07); filter: blur(5px) brightness(1.06); }
 .hero__shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(29, 22, 18, 0.45) 0%, rgba(29, 22, 18, 0) 28%, rgba(29, 22, 18, 0) 50%, rgba(29, 22, 18, 0.55) 100%), linear-gradient(90deg, rgba(29, 22, 18, 0.45), rgba(29, 22, 18, 0) 55%); }
 
-.hd { position: absolute; inset: 0; opacity: 0; pointer-events: none; overflow: hidden; transition: opacity 1.6s var(--ease); }
+.hd { position: absolute; inset: 0; opacity: 0; pointer-events: none; overflow: hidden; transition: opacity 2.4s cubic-bezier(0.45, 0, 0.2, 1); }
 .hd.on { opacity: 1; pointer-events: auto; }
 .hd__img { position: absolute; top: 0; right: 0; height: 100%; width: 64%; object-fit: cover; transform: scale(1.08); transform-origin: 60% 40%; transition: transform 7s var(--ease);
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 26%); mask-image: linear-gradient(90deg, transparent 0%, #000 26%); }
@@ -534,11 +535,12 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
   const hero = document.querySelector(".hero"), vid = document.getElementById("heroVideo");
   const dresses = [...document.querySelectorAll(".hd")];
   const stepBtns = [...document.querySelectorAll("#steps button")];
-  const HOLD_AFTER_VIDEO = 1800, DRESS_MS = 5600;
+  const FADE_LEAD = 1.9, DRESS_MS = 5600, RATE = 0.9;
   let phase = 0, phaseStart = performance.now(), phaseDur = 6000, heroVisible = true, timer = 0;
-  vid.muted = true; vid.defaultMuted = true;
+  vid.muted = true; vid.defaultMuted = true; vid.playbackRate = RATE; vid.defaultPlaybackRate = RATE;
+  const videoMs = () => ((isFinite(vid.duration) && vid.duration > 0 ? vid.duration : 4) - FADE_LEAD) * 1000 / RATE;
   const playVid = () => { vid.muted = true; const pr = vid.play(); if (pr && pr.catch) pr.catch(() => {}); };
-  vid.addEventListener("playing", () => { if (phase === 0) phaseStart = performance.now() - vid.currentTime * 1000; });
+  vid.addEventListener("playing", () => { vid.playbackRate = RATE; if (phase === 0) phaseStart = performance.now() - vid.currentTime * 1000 / RATE; });
   const setPhase = (k) => {
     phase = k; phaseStart = performance.now();
     hero.dataset.phase = String(k);
@@ -546,7 +548,7 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
     stepBtns.forEach((b, i) => { b.classList.toggle("on", i === k); b.querySelector("b").style.transform = "scaleX(" + (i < k ? 1 : 0) + ")"; });
     clearTimeout(timer);
     if (k === 0) {
-      phaseDur = ((isFinite(vid.duration) && vid.duration > 0 ? vid.duration : 4) * 1000) + HOLD_AFTER_VIDEO;
+      phaseDur = videoMs();
       try { vid.currentTime = 0; } catch (e) {}
       playVid();
       // if a phone refuses to play (e.g. battery saver), keep the hero moving with the gowns
@@ -556,8 +558,11 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
       timer = setTimeout(() => setPhase((k + 1) % 4), DRESS_MS);
     }
   };
-  vid.addEventListener("ended", () => { if (phase === 0) { clearTimeout(timer); timer = setTimeout(() => setPhase(1), HOLD_AFTER_VIDEO); } });
-  vid.addEventListener("loadedmetadata", () => { if (phase === 0) phaseDur = vid.duration * 1000 + HOLD_AFTER_VIDEO; });
+  // the first gown starts dissolving in while the last second and a half of the video is still playing
+  const checkFade = () => { if (phase === 0 && isFinite(vid.duration) && vid.duration > 0 && !vid.paused && vid.currentTime >= vid.duration - FADE_LEAD) setPhase(1); };
+  vid.addEventListener("timeupdate", checkFade);
+  vid.addEventListener("ended", () => { if (phase === 0) setPhase(1); });
+  vid.addEventListener("loadedmetadata", () => { vid.playbackRate = RATE; if (phase === 0) phaseDur = videoMs(); });
   vid.addEventListener("canplay", () => { if (phase === 0 && vid.paused && !vid.ended && heroVisible) playVid(); });
   // strict browsers: the first touch, click, key or scroll starts it, with no button on screen
   const kick = () => { if (phase === 0 && vid.paused && !vid.ended) playVid(); };
@@ -565,10 +570,11 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
   stepBtns.forEach((b) => b.addEventListener("click", () => setPhase(+b.dataset.k)));
   new IntersectionObserver((es) => {
     heroVisible = es[0].isIntersecting;
-    if (!heroVisible) vid.pause(); else if (phase === 0 && !vid.ended) playVid();
+    if (!heroVisible) vid.pause(); else if (phase <= 1 && !vid.ended) playVid();
   }).observe(hero);
   document.addEventListener("visibilitychange", () => { if (!document.hidden && heroVisible && phase === 0 && !vid.ended) playVid(); });
   const renderSteps = (now) => {
+    checkFade();
     const b = stepBtns[phase] && stepBtns[phase].querySelector("b");
     if (b) b.style.transform = "scaleX(" + Math.min(1, (now - phaseStart) / phaseDur).toFixed(4) + ")";
   };

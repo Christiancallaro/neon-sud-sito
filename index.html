@@ -138,10 +138,6 @@ em, .it { font-family: var(--f-serif); font-style: italic; font-weight: 400; }
 .hc--intro h1 em { display: block; }
 .hc--intro p { margin: 0 0 30px; max-width: 30rem; font-size: 18px; }
 .hc__cta { display: flex; flex-wrap: wrap; gap: 14px; }
-.hero__play { position: absolute; z-index: 4; left: 68%; top: 46%; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 14px; border: 0; background: none; color: var(--white); cursor: pointer; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; }
-.hero__play i { width: 84px; height: 84px; border-radius: 50%; border: 1px solid rgba(255, 253, 249, 0.8); position: relative; transition: background 0.4s, transform 0.4s var(--ease); }
-.hero__play i::after { content: ""; position: absolute; left: 34px; top: 27px; border-left: 20px solid var(--white); border-top: 15px solid transparent; border-bottom: 15px solid transparent; }
-.hero__play:hover i { background: rgba(255, 253, 249, 0.18); transform: scale(1.06); }
 .hero__steps { position: absolute; z-index: 3; right: var(--pad); bottom: clamp(28px, 5vh, 48px); display: flex; gap: 18px; color: var(--white); transition: color 0.8s var(--ease); }
 .hero:not([data-phase="0"]) .hero__steps { color: var(--ink); }
 .hero__steps button { display: grid; gap: 10px; padding: 6px 0; border: 0; background: none; cursor: pointer; text-align: left; opacity: 0.6; transition: opacity 0.4s; }
@@ -297,8 +293,7 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
   .hc { right: var(--pad); }
   .hc--intro p { font-size: 16px; }
   .hero__steps { left: var(--pad); right: var(--pad); gap: 8px; }
-  .hero__play { left: 50%; top: 34%; }
-  .hero__steps button { flex: 1; }
+    .hero__steps button { flex: 1; }
   .hero__steps span { display: none; }
   .hero__steps i { width: 100%; }
   .steps { grid-template-columns: 1fr; }
@@ -342,12 +337,11 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
 
 <main>
   <section class="hero" id="top" aria-label="Atelier Angela Maffeo" data-phase="0">
-      <video class="hero__video" id="heroVideo" muted playsinline webkit-playsinline preload="auto" poster="video/poster.webp" aria-label="Un drone attraversa un giardino di ulivi allestito per un matrimonio, passa tra le spose ed entra in una sala con lampadari di cristallo">
+      <video class="hero__video" id="heroVideo" muted autoplay playsinline webkit-playsinline preload="auto" poster="video/poster.webp" aria-label="Un drone attraversa un giardino di ulivi allestito per un matrimonio, passa tra le spose ed entra in una sala con lampadari di cristallo">
         <source src="video/drone.mp4" type="video/mp4">
         <source src="video/drone.webm" type="video/webm">
       </video>
       <div class="hero__shade" id="shade"></div>
-      <button class="hero__play" id="heroPlay" type="button"><i></i><span id="playHint">Guarda il video</span></button>
 
       <div class="hd" data-i="0">
         <div class="hd__bg" style="background-image:url('img/abito-04-blur.webp')"></div>
@@ -547,20 +541,15 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
   burger.addEventListener("click", () => setMenu(!root.classList.contains("menu-open")));
   mmenu.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
 
-  /* ---------- hero: the video starts on mouse hover (or the first touch on phones), then three gowns dissolve in and the cycle repeats ---------- */
-  const hero = document.querySelector(".hero"), vid = document.getElementById("heroVideo"), playBtn = document.getElementById("heroPlay");
+  /* ---------- hero: the video starts by itself as soon as the site opens, then three gowns dissolve in and the cycle repeats ---------- */
+  const hero = document.querySelector(".hero"), vid = document.getElementById("heroVideo");
   const dresses = [...document.querySelectorAll(".hd")];
   const stepBtns = [...document.querySelectorAll("#steps button")];
   const HOLD_AFTER_VIDEO = 1800, DRESS_MS = 5600;
-  let phase = 0, phaseStart = performance.now(), phaseDur = 6000, heroVisible = true, timer = 0, engaged = false;
+  let phase = 0, phaseStart = performance.now(), phaseDur = 6000, heroVisible = true, timer = 0;
   vid.muted = true; vid.defaultMuted = true;
-  if (matchMedia("(hover: none)").matches) document.getElementById("playHint").textContent = "Tocca per guardare";
-  const playVid = () => {
-    vid.muted = true;
-    const pr = vid.play();
-    if (pr && pr.then) pr.then(() => { playBtn.hidden = true; }).catch(() => { playBtn.hidden = false; });
-  };
-  vid.addEventListener("playing", () => { playBtn.hidden = true; phaseStart = performance.now() - vid.currentTime * 1000; });
+  const playVid = () => { vid.muted = true; const pr = vid.play(); if (pr && pr.catch) pr.catch(() => {}); };
+  vid.addEventListener("playing", () => { if (phase === 0) phaseStart = performance.now() - vid.currentTime * 1000; });
   const setPhase = (k) => {
     phase = k; phaseStart = performance.now();
     hero.dataset.phase = String(k);
@@ -570,37 +559,29 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
     if (k === 0) {
       phaseDur = ((isFinite(vid.duration) && vid.duration > 0 ? vid.duration : 4) * 1000) + HOLD_AFTER_VIDEO;
       try { vid.currentTime = 0; } catch (e) {}
-      if (engaged) playVid(); else { vid.pause(); playBtn.hidden = false; }
+      playVid();
+      // if a phone refuses to play (e.g. battery saver), keep the hero moving with the gowns
+      timer = setTimeout(() => { if (phase === 0 && vid.paused && vid.currentTime < 0.05) setPhase(1); }, 4500);
     } else {
-      playBtn.hidden = true;
       phaseDur = DRESS_MS;
       timer = setTimeout(() => setPhase((k + 1) % 4), DRESS_MS);
     }
   };
-  const engage = () => {
-    if (engaged) return;
-    engaged = true;
-    if (phase === 0) { if (vid.ended) setPhase(0); else playVid(); }
-  };
-  // desktop: the mouse passing over the hero starts it; phones: the first touch anywhere
-  hero.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") engage(); });
-  hero.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") engage(); });
-  addEventListener("touchstart", engage, { passive: true, once: true });
-  addEventListener("pointerdown", engage, { once: true });
-  addEventListener("keydown", engage, { once: true });
-  playBtn.addEventListener("click", () => { engaged = true; setPhase(0); });
   vid.addEventListener("ended", () => { if (phase === 0) { clearTimeout(timer); timer = setTimeout(() => setPhase(1), HOLD_AFTER_VIDEO); } });
   vid.addEventListener("loadedmetadata", () => { if (phase === 0) phaseDur = vid.duration * 1000 + HOLD_AFTER_VIDEO; });
-  stepBtns.forEach((b) => b.addEventListener("click", () => { engaged = true; setPhase(+b.dataset.k); }));
+  vid.addEventListener("canplay", () => { if (phase === 0 && vid.paused && !vid.ended && heroVisible) playVid(); });
+  // strict browsers: the first touch, click, key or scroll starts it, with no button on screen
+  const kick = () => { if (phase === 0 && vid.paused && !vid.ended) playVid(); };
+  ["touchstart", "pointerdown", "keydown", "scroll", "wheel"].forEach((ev) => addEventListener(ev, kick, { passive: true }));
+  stepBtns.forEach((b) => b.addEventListener("click", () => setPhase(+b.dataset.k)));
   new IntersectionObserver((es) => {
     heroVisible = es[0].isIntersecting;
-    if (!heroVisible) vid.pause(); else if (engaged && phase === 0 && !vid.ended) playVid();
+    if (!heroVisible) vid.pause(); else if (phase === 0 && !vid.ended) playVid();
   }).observe(hero);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && heroVisible && phase === 0 && !vid.ended) playVid(); });
   const renderSteps = (now) => {
     const b = stepBtns[phase] && stepBtns[phase].querySelector("b");
-    if (!b) return;
-    const waiting = phase === 0 && !engaged;
-    b.style.transform = "scaleX(" + (waiting ? 0 : Math.min(1, (now - phaseStart) / phaseDur)).toFixed(4) + ")";
+    if (b) b.style.transform = "scaleX(" + Math.min(1, (now - phaseStart) / phaseDur).toFixed(4) + ")";
   };
 
   /* ---------- reveals, parallax ---------- */

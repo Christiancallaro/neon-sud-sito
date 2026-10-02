@@ -111,7 +111,6 @@ em, .it { font-family: var(--f-serif); font-style: italic; font-weight: 400; }
 
 .hd { position: absolute; inset: 0; opacity: 0; pointer-events: none; overflow: hidden; transition: opacity 1.6s var(--ease); }
 .hd.on { opacity: 1; pointer-events: auto; }
-.hd__bg { position: absolute; inset: -60px; background-size: cover; background-position: center; filter: saturate(0.95) brightness(0.85); }
 .hd__img { position: absolute; top: 0; right: 0; height: 100%; width: 64%; object-fit: cover; transform: scale(1.08); transform-origin: 60% 40%; transition: transform 7s var(--ease);
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 26%); mask-image: linear-gradient(90deg, transparent 0%, #000 26%); }
 .hd--full .hd__img { width: 100%; -webkit-mask-image: none; mask-image: none; }
@@ -342,13 +341,12 @@ footer .small { margin-top: 30px; font-size: 12.5px; letter-spacing: 0.1em; }
         <div class="hd__cap"><p class="label">La collezione · 01</p><h2>Principessa</h2><p>Gonna ampia in tulle luminoso e uno strascico pensato per lo scalone.</p><a class="btn btn--light" href="https://wa.me/393467416047?text=Buongiorno%2C%20vorrei%20prenotare%20un%20appuntamento%20in%20atelier." target="_blank" rel="noopener">Prenota una prova</a></div>
       </div>
       <div class="hd hd--full" data-i="1">
-        <img class="hd__img" src="img/hero-ricami.webp" alt="Sposa con abito a maniche lunghe e corpino ricamato davanti a una finestra con tende" style="object-position:20% 30%;--mpos:51% 30%">
+        <img class="hd__img" src="img/hero-ricami.webp" alt="Sposa con abito a maniche lunghe e corpino ricamato davanti a una finestra con tende" style="object-position:0% 30%;--mpos:51% 30%">
         <div class="hd__shade"></div>
         <div class="hd__cap"><p class="label">La collezione · 02</p><h2>Ricami <em>di luce</em></h2><p>Maniche lunghe velate e un corpino ricamato che brilla a ogni passo.</p><a class="btn btn--light" href="https://wa.me/393467416047?text=Buongiorno%2C%20vorrei%20prenotare%20un%20appuntamento%20in%20atelier." target="_blank" rel="noopener">Prenota una prova</a></div>
       </div>
-      <div class="hd" data-i="2">
-        <div class="hd__bg" style="background-image:url('img/abito-08-blur.webp')"></div>
-        <img class="hd__img" src="img/abito-08.webp" alt="Sposa con abito a sirena e mantello di tulle in una piazza di pietra" style="object-position:50% 20%;--mpos:50% 16%">
+      <div class="hd hd--full" data-i="2">
+        <img class="hd__img" src="img/hero-mantello.webp" alt="Sposa con abito a sirena e mantello di tulle davanti alla facciata di una cattedrale in pietra" style="object-position:0% 40%;--mpos:52% 30%">
         <div class="hd__shade"></div>
         <div class="hd__cap"><p class="label">La collezione · 03</p><h2>Mantello <em>di tulle</em></h2><p>Sirena ricamata con un mantello leggero e maniche a sbuffo.</p><a class="btn btn--light" href="https://wa.me/393467416047?text=Buongiorno%2C%20vorrei%20prenotare%20un%20appuntamento%20in%20atelier." target="_blank" rel="noopener">Prenota una prova</a></div>
       </div>
